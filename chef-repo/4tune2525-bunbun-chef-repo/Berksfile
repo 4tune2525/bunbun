@@ -1,0 +1,11 @@
+site :opscode
+cookbook 'nginx'
+cookbook 'nodejs'
+cookbook 'mongodb', git:'git://github.com/edelight/chef-mongodb.git'
+cookbook 'npm'
+cookbook 'java'
+cookbook 'emacs'
+cookbook 'git'
+cookbook 'capistrano'
+cookbook 'jenkins'
+cookbook 'phantomjs'

@@ -1,0 +1,23 @@
+{
+  "run_list":[
+    "recipe[user]",
+    "recipe[site_user]",
+    "recipe[sudo]",
+    "recipe[openssh]",
+    "recipe[simple_iptables]",
+    "recipe[site_simple_iptables]"
+  ],
+  "authorization":{
+    "sudo":{
+      "users":["4tune2525"],
+      "passwordless":"true"
+    }
+  },
+  "openssh":{
+    "server":{
+      "permit_root_login":"no",
+      "password_authentication":"no",
+      "port":"5520"
+    }
+  }
+}

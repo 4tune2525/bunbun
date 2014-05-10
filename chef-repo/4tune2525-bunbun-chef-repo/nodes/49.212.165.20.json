@@ -1,0 +1,30 @@
+{
+	"hostname": "bunbun.4tune2525.net",
+  	"nginx":{
+		"log_dir":"/var/log/nginx",
+		"default_root":"/usr/share/nginx/4tune2525.net/bunbun/dev/www/",
+		"worker_processes":2,
+		"worker_connections":1024,
+		"pid":"/var/run/nginx.pid",
+		"dir":"/var/log/nginx/"
+	},
+    "java":{
+        "install_flavor":"oracle",
+        "jdk_version":7,
+        "java_home":"/usr/local/java",
+        "oracle":{
+            "accept_oracle_download_terms":true
+        }
+    },
+	"run_list":[
+		//"recipe[nginx]",
+        "recipe[nodejs]",
+        "recipe[mongodb]",
+        "recipe[npm]",
+        "recipe[emacs]",
+        "recipe[java]",
+        "recipe[jenkins]",
+        "recipe[jstestdriver]",
+        "recipe[phantomjs]"
+	]
+}
