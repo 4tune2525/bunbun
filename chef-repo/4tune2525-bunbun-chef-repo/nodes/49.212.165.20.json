@@ -18,6 +18,8 @@
     },
 	"run_list":[
 		//"recipe[nginx]",
+        "recipe[basic]",
+        "recipe[commentout_yumconfig_exclude_kernel]",
         "recipe[nodejs]",
         "recipe[mongodb]",
         "recipe[npm]",
