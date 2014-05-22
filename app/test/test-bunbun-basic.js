@@ -1,7 +1,18 @@
-function log(msg){
-	jstestdriver.console.log(msg);
+function log(format,msg){
+	jstestdriver.console.log(format,msg);
 } 
 
+function mLog(title){
+	return function(state){
+		if(_.exists(title)){
+			log(title+" : %o",state);
+		}else{
+			log("%o",state);
+		}
+		
+		return {answer:undefined, state:state};
+	};
+}
 
 AsyncTestCase("Test isArray",{
 
@@ -32,8 +43,8 @@ AsyncTestCase("Test each",{
 			result.push(x);
 		};
 
-		assertException(function(){bbb.each();},"TypeError");
-		assertException(function(){bbb.each(ar,ar);},"TypeError");
+		assertEquals(undefined,bbb.each());
+		assertEquals({},bbb.each(obj,ar));
 		
 		bbb.each(ar,func);
 		assertEquals([2,4,6],result);
@@ -74,9 +85,9 @@ AsyncTestCase("Test mapper",{
 			x *= 2;
 		};
 		
-		assertException(function(){bbb.mapper(obj,iterator);},"TypeError");
+		assertEquals([],bbb.mapper(obj,iterator));
+		assertEquals([void 0,void 0,void 0],bbb.mapper(ar,iterator));
 		assertException(function(){bbb.mapper(ar,obj);},"TypeError");
-		assertException(function(){bbb.mapper(ar,iterator);},"Error");
 	},
 
 	"test should mapper returns array by doing iteration.":function(){
@@ -126,9 +137,9 @@ AsyncTestCase("Test reducer",{
 			x *= 2;
 		};
 		
-		assertException(function(){bbb.reducer(obj,iterator,obj);},"TypeError");
+		assertEquals({},bbb.reducer(obj,iterator,obj));
 		assertException(function(){bbb.reducer(ar,obj,obj);},"TypeError");
-		assertException(function(){bbb.reducer(ar,iterator);},"Error");
+		assertEquals(undefined,bbb.reducer(ar,iterator));
 	},
 
 	"test should reducer returns array by doing iteration.":function(){
@@ -160,7 +171,7 @@ AsyncTestCase("Test reducer",{
 
 	"test should error that reducer do not return anything.":function(){
 		
-		assertException(function(){bbb.reducer([1,2,3],function(){return;},0);},"Error");
+		assertEquals(undefined,bbb.reducer([1,2,3],function(){return;},0));
 		
 	}
 });
@@ -207,5 +218,142 @@ AsyncTestCase("Test partitioner",{
 		bbb.partitioner(ar,compareFunc);
 
 		assertEquals([8,5,3,2,1,1],ar);
+	}
+});
+
+AsyncTestCase("actions",{
+	"test should.":function(){
+	}
+});
+
+AsyncTestCase("lift",{
+	"test should return 3 and log -3 and 3 by using actions.":function(){
+
+		var mNeg2 = bbb.lift(function(n){return -n;});
+
+		assertEquals(3,bbb.actions([mNeg2(),mLog(),mNeg2(),mLog()],function(notUsed,state){return state;})(3));
+	}
+
+});
+
+AsyncTestCase("makeTestAction",{
+	"test should return 6 and log [{value:2},{value:4},{value:6},{value:8},{value:10}] and [{total:6, num:2},{total:24, num:3}], [{total:24, num:3},{total:6 ,num:2}], {total:30, num:5, avg:6}.":function(){
+		
+		var data = [];
+		var dataBase = [1,2,3,4,5];
+
+		for(var i=0;i<dataBase.length;i++){
+			data.push({value:dataBase[i]});
+		}
+		
+		var mapper = function(dataElm,index,data){
+			dataElm.value *= 2;
+			return dataElm;
+		};
+
+		var combiner = function(memo,dataElm,index,data){
+			if(!_.exists(memo)){
+				memo = [{total:0, num:0},{total:0, num:0}];
+			}
+
+			if(dataElm.value < 5){
+				memo[0].total += dataElm.value;
+				memo[0].num++;
+			}else{
+				memo[1].total += dataElm.value;
+				memo[1].num++;
+			}
+
+			return memo;
+		};
+
+		var partitioner = _.comparator(function(x,y){
+			return x.num > y.num;
+		});
+
+		var reducer = function(memo,dataElm,index,data){
+			if(!_.exists(memo)){
+				memo =  {total:0, num:0, avg:0};
+			}
+
+			memo.total += dataElm.total;
+			memo.num += dataElm.num;
+			memo.avg = memo.total/memo.num;
+
+			return memo;
+		};
+
+		var testFunc = bbb.makeTestAction(mapper,combiner,partitioner,reducer,mLog,function(notUsed,state){return state.avg;});
+
+		assertEquals(6,testFunc(data));
+		
+	}
+});
+
+
+AsyncTestCase("makeDoMapCombineAction",{
+	"test should return [{total:6, num:2},{total:24, num:3}].":function(){
+		
+		var data = [];
+		var dataBase = [1,2,3,4,5];
+
+		for(var i=0;i<dataBase.length;i++){
+			data.push({value:dataBase[i]});
+		}
+		
+		var mapper = function(dataElm,index,data){
+			dataElm.value *= 2;
+			return dataElm;
+		};
+
+		var combiner = function(memo,dataElm,index,data){
+			if(!_.exists(memo)){
+				memo = [{total:0, num:0},{total:0, num:0}];
+			}
+
+			if(dataElm.value < 5){
+				memo[0].total += dataElm.value;
+				memo[0].num++;
+			}else{
+				memo[1].total += dataElm.value;
+				memo[1].num++;
+			}
+
+			return memo;
+		};
+
+		var doMapCombineAction = bbb.makeDoMapCombineAction(mapper,combiner);
+
+		assertEquals([{total:6, num:2},{total:24, num:3}],doMapCombineAction(data));
+		
+	}
+});
+
+
+AsyncTestCase("makeDoPartitionReduceAction",{
+	"test should return 6 .":function(){
+		
+		var data = [{total:6,num:2},{total:24,num:3}];
+
+		var partitioner = _.comparator(function(x,y){
+			return x.num > y.num;
+		});
+
+		var reducer = function(memo,dataElm,index,data){
+			if(!_.exists(memo)){
+				memo =  {total:0, num:0, avg:0};
+			}
+
+			memo.total += dataElm.total;
+			memo.num += dataElm.num;
+			memo.avg = memo.total/memo.num;
+
+			return memo;
+		};
+
+		var doPartitionReduceFunc = bbb.makeDoPartitionReduceAction(partitioner,reducer,function(notUsed,state){return state.avg;});
+
+		assertEquals(6,doPartitionReduceFunc(data));
+		
 	}
 });

@@ -5,14 +5,21 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-var routes = require('./routes/index');
-var users = require('./routes/users');
+var http = require('http');
+
+ var routes = require('./routes/index');
+// var users = require('./routes/users');
+
+
+var bunbunSockets = require('./sockets/bunbun-sockets.js');
 
 var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
+
+app.set('port', process.env.PORT || 3000);
 
 app.use(favicon());
 app.use(logger('dev'));
@@ -22,7 +29,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
-app.use('/users', users);
+//app.use('/users', users);
+
 
 /// catch 404 and forwarding to error handler
 app.use(function(req, res, next) {
@@ -55,5 +63,14 @@ app.use(function(err, req, res, next) {
     });
 });
 
+
+
+var server = http.createServer(app);
+var io = require('socket.io').listen(server);
+
+server.listen(app.get('port'));
+
+var bunbunSocketsNameSpace = io.of('/bunbun');
+bunbunSocketsNameSpace.on('connection',bunbunSockets.onConnection);
 
 module.exports = app;

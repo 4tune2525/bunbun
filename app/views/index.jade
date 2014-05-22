@@ -1,5 +1,17 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
+  script(src='/javascripts/bunbun-basic.js')
+  script(src='/socket.io/socket.io.js')
+  body
+    h1= title
+    p #{title}
+
+    h2 State
+      label#state
+    h2 Job
+    textarea= defaulJob
+    button#test test
+    button#start start
+    h2 Result
+      label#result
