@@ -192,8 +192,8 @@ AsyncTestCase("Test partitioner",{
 			x *= 2;
 		};
 	
-		assertException(function(){bbb.partitioner(obj,func);},"TypeError");
-		assertException(function(){bbb.partitioner(ar,obj);},"TypeError");
+		assertEquals(obj,bbb.partitioner(obj,func));
+		assertEquals(ar,bbb.partitioner(ar,obj));
 		assertNoException(function(){bbb.partitioner(ar,func);});
 	},
 
@@ -283,7 +283,7 @@ AsyncTestCase("makeTestAction",{
 			return memo;
 		};
 
-		var testFunc = bbb.makeTestAction(mapper,combiner,partitioner,reducer,mLog,function(notUsed,state){return state.avg;});
+		var testFunc = bbb.makeTestAction(mapper,combiner,partitioner,reducer,mLog,function(notUsed,state){return state.avg;},{combinerMemo:[{total:0, num:0},{total:0, num:0}],reducerMemo:{total:0, num:0, avg:0}});
 
 		assertEquals(6,testFunc(data));
 		
@@ -322,7 +322,7 @@ AsyncTestCase("makeDoMapCombineAction",{
 			return memo;
 		};
 
-		var doMapCombineAction = bbb.makeDoMapCombineAction(mapper,combiner);
+		var doMapCombineAction = bbb.makeDoMapCombineAction(mapper,combiner,{combinerMemo:[{total:0, num:0},{total:0, num:0}]});
 
 		assertEquals([{total:6, num:2},{total:24, num:3}],doMapCombineAction(data));
 		
@@ -351,7 +351,7 @@ AsyncTestCase("makeDoPartitionReduceAction",{
 			return memo;
 		};
 
-		var doPartitionReduceFunc = bbb.makeDoPartitionReduceAction(partitioner,reducer,function(notUsed,state){return state.avg;});
+		var doPartitionReduceFunc = bbb.makeDoPartitionReduceAction(partitioner,reducer,function(notUsed,state){return state.avg;},{reducerMemo:{total:0, num:0, avg:0}});
 
 		assertEquals(6,doPartitionReduceFunc(data));
 		

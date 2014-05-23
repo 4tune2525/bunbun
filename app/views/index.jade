@@ -1,8 +1,13 @@
 extends layout
 
 block content
+  script(src='/javascripts/lib/underscore.js')
+  script(src='/javascripts/lib/underscore-contrib.min.js')
+  script(src='/javascripts/lib/jquery-2.1.1.min.js')
   script(src='/javascripts/bunbun-basic.js')
   script(src='/socket.io/socket.io.js')
+  script(src='/javascripts/bunbun-worker.js')
+  script(src='/javascripts/bunbun-client.js')
   body
     h1= title
     p #{title}
@@ -10,7 +15,7 @@ block content
     h2 State
       label#state
     h2 Job
-    textarea= defaulJob
+    textarea#job= defaultJob
     button#test test
     button#start start
     h2 Result

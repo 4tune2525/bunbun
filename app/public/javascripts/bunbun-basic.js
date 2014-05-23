@@ -63,7 +63,11 @@ var bbb = {};
 	bbb.reducer = function(ar,iterator,memo,context){
 
 		if(_.reduce){
-			return _.reduce(ar,iterator,memo,context);
+			if(arguments.length <= 2 || (!memo && !context)){
+				return _.reduce(ar,iterator);
+			}else{
+				return _.reduce(ar,iterator,memo,context);
+			}
 		}
 
 		// if(!memo && (memo !== 0)) throw new Error("Reducer needs memo(an initial value).");
@@ -86,10 +90,10 @@ var bbb = {};
 
 	bbb.partitioner = function(ar,compareFunction){
 		if(!(bbb.isArray(ar)) || (typeof compareFunction !== 'function')){
-			throw new TypeError("Partitioner needs array and function as arguments.");
+			// throw new TypeError("Partitioner needs array and function as arguments.");
+		}else{
+			ar.sort(compareFunction);
 		}
-
-		ar.sort(compareFunction);
 
 		return ar;
 	};
@@ -132,21 +136,41 @@ var bbb = {};
 
 	bbb.mPartitioner = bbb.lift(bbb.partitioner);
 
-	bbb.makeTestAction = function(mapper,combiner,partitioner,reducer,mOut,returnFun){
-		return bbb.actions([mOut("data")
+	bbb.makeTestAction = function(mapper,combiner,partitioner,reducer,mOut,returnFun,option){
+		if(option){
+			return bbb.actions([mOut("data")
+							,bbb.mMapper(mapper,option.mapperContext),mOut("resultMapper")
+							,bbb.mCombiner(combiner,option.combinerMemo,option.combinerContext),mOut("resultCombiner")
+							,bbb.mPartitioner(partitioner),mOut("resultPartitioner")
+							,bbb.mReducer(reducer,option.reducerMemo,option.reducerContext),mOut("resultReducer")]
+					,returnFun);
+		}else{
+			return bbb.actions([mOut("data")
 							,bbb.mMapper(mapper),mOut("resultMapper")
 							,bbb.mCombiner(combiner),mOut("resultCombiner")
 							,bbb.mPartitioner(partitioner),mOut("resultPartitioner")
 							,bbb.mReducer(reducer),mOut("resultReducer")]
 					,returnFun);
+		}
 	};
 
-	bbb.makeDoMapCombineAction = function(mapper,combiner){
-		return bbb.actions([bbb.mMapper(mapper),bbb.mCombiner(combiner)],function(notUsed,state){return state;});
+	bbb.makeDoMapCombineAction = function(mapper,combiner,option){
+		if(option){
+			return bbb.actions([bbb.mMapper(mapper,option.mapperContext)
+							,bbb.mCombiner(combiner,option.combinerMemo,option.combinerContext)]
+						   ,function(notUsed,state){return state;});
+		}else{
+			return bbb.actions([bbb.mMapper(mapper),bbb.mCombiner(combiner)]
+						   ,function(notUsed,state){return state;});
+		}
 	};
 	
-	bbb.makeDoPartitionReduceAction = function(partitioner,reducer,returnFun){
-		return bbb.actions([bbb.mPartitioner(partitioner),bbb.mReducer(reducer)],returnFun);
+	bbb.makeDoPartitionReduceAction = function(partitioner,reducer,returnFun,option){
+		if(option){
+			return bbb.actions([bbb.mPartitioner(partitioner),bbb.mReducer(reducer,option.reducerMemo,option.reducerContext)],returnFun);
+		}else{
+			return bbb.actions([bbb.mPartitioner(partitioner),bbb.mReducer(reducer)],returnFun);
+		}
 	};
 	
 })(_);
