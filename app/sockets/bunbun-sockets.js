@@ -1,4 +1,5 @@
 
+
 //var manage = require('../models/manage.js');
 
 var _ = require('underscore-contrib');
@@ -93,7 +94,7 @@ var distributeSockets = function(sockets,calcId,job){
 
 	console.log('distributedData ' + JSON.stringify(distributedData));
 
-	_.each(distributedSockets,function(socketData,index,sockets){
+	_.each(distributedSockets,function(socketData,index){
 		socketData.charge.data = distributedData[index];
 
 		console.log('data ' + JSON.stringify(socketData.charge.data));
@@ -107,22 +108,34 @@ var distributeSockets = function(sockets,calcId,job){
 
 			if(isExistSocket(calcId)){
 
+				var emitId = socketData.calcId;
 				socketData.calcId = 0;
 
 				if(isFinishedCalc(calcId)){
 
-					console.log('data' + JSON.stringify(data));
-					
-					socketData.socket.emit('finish',data);
+					console.log('finish data' + JSON.stringify(data));
 					
 					_.each(sockets,function(socketData,index,sockets){
+
+						console.log('socketData id ' + socketData.id+ ' calcId ' + socketData.calcId + ' emitId ' + emitId);
+ 
 						if(socketData.id === socketData.calcId){
+							socketData.socket.emit('finish',data);
+
+							console.log('finish done : data ' + JSON.stringify(data) + ' id = calcId '+  socketData.calcId);
+
 							socketData.calcId = 0;
 						}
 					});
 				}else if(isMissedCalc(calcId)){
+					
+					console.log('continue miss data' + JSON.stringify(data));
 
-					socketData.socket.emit('continue',data);
+					_.each(sockets,function(socketData,index,sockets){
+						if(socketData.id === socketData.calcId){
+							socketData.socket.emit('continue',data);
+						}
+					});
 
 					_.each(missCalculations,function(missCalc,index,missCalculations){
 						if(calcId === missCalc.calcId){
@@ -130,16 +143,27 @@ var distributeSockets = function(sockets,calcId,job){
 						}
 					});
 				}else{
-					socketData.socket.emit('continue',data);
-					
+
+					console.log('continue else data' + JSON.stringify(data));
+
 					_.each(sockets,function(socketData,index,sockets){
-						distributeSockets(sockets,calcId,job);
+						if(socketData.id === socketData.calcId){
+							socketData.socket.emit('continue',data);
+						}
 					});
+					
 					
 				}
 			}else{
-				socketData.charge = {};
-				socketData.calcId = 0;
+
+				_.each(sockets,function(socketData,index,sockets){
+					if(socketData.calcId === calcId){
+						socketData.charge = {};
+						socketData.calcId = 0;
+					}
+
+				});
+
 			}
 
 		});
@@ -242,7 +266,7 @@ var onConnection = function(socket){
 								if(socketData.calcId === missCalc.calcId){
 
 									if(missCalc.job.data && socketData.charge){
-										missCalc.job.data.concat(socketData.charge.data);
+										missCalc.job.data = missCalc.job.data.concat(socketData.charge.data);
 									}
 								}
 							});

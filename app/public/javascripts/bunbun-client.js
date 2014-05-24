@@ -14,7 +14,7 @@
 
 	var makeTask;
 
-	var calcCharge;
+	var calcChargeData;
 
 	var workerNum = 8;
 
@@ -25,8 +25,6 @@
 	var startTime;
 
 	var endTime;
-
-	var charge;
 
 	$(function(){
 
@@ -89,7 +87,7 @@
 		};
 
 
-		calcCharge = function(charge){
+		calcChargeData = function(charge,callback){
 			
 			var workers = [];
 			var doneWorkerNum = 0;
@@ -102,7 +100,6 @@
 				var distributedData = calcDistributedData(workerNum,charge.data);
 
 				for(var i=0;i<workerNum;i++){
-					charge.data = distributedData[i];
 
 					workers.push(new Worker(workerPath));
 
@@ -120,7 +117,7 @@
 
 						if(doneWorkerNum === workerNum){
 
-							charge.data = bbb.combiner(newData,makeTask(charge.taskString).combiner);
+							var sendData = charge.data = bbb.combiner(newData,makeTask(charge.taskString).combiner);
 
 							console.log(JSON.stringify(charge.data));
 
@@ -128,13 +125,15 @@
 							$('#start,#test').removeAttr('disabled');
 							$('#state').text('ready');
 
+							callback(sendData);
+
 						}
 					};
 
 
 					workers[i].postMessage({
 						taskString:charge.taskString,
-						data:charge.data
+						data:distributedData[i]
 					});
 
 					
@@ -150,6 +149,8 @@
 				$('#start,#test').removeAttr('disabled');
 				$('#state').text('ready');
 
+				callback(newData);
+
 			}
 
 		};
@@ -160,18 +161,15 @@
 			'max reconnection attempts' : Infinity
 		});
 
-		socket.on('charge',function(receivedCharge,fn){
+		socket.on('charge',function(charge,fn){
 
-			charge = receivedCharge;
+			var localCharge = charge;
 
 			$('#state').text('charge');
 			$('#start,#test').attr({disabled:'disabled'});
 			
-			calcCharge(charge);
+			calcChargeData(localCharge,fn);
 
-			console.log(JSON.stringify(charge));
-
-			fn(JSON.stringify(charge));
 		});
 
 
@@ -215,12 +213,17 @@
 		});
 
 		socket.on('continue',function(data){
-			result.concat(data);
+			result = result.concat(data);
 		});
 
 		socket.on('finish',function(data){
 
-			result.concat(data);
+			result = result.concat(data);
+
+			job.task = makeTask(job.taskString);
+
+
+			$('#result').append('</br>result : ' + JSON.stringify(result));
 
 			$('#result').append('</br>resultSelecter : ' + bbb.makeDoPartitionReduceAction(job.task.partitioner
 															  ,job.task.reducer
