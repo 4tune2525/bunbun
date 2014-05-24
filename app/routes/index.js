@@ -4,8 +4,8 @@ var router = express.Router();
 /* GET home page. */
 router.get('/', function(req, res) {
 
-	var defaultJob = {
-		data:function(){
+	var defaultTask = {
+		dataBuilder:function(){
 			var data = [];
 			for(var i=0;i<20;i++){
 				data.push({});
@@ -55,15 +55,15 @@ router.get('/', function(req, res) {
 		}
 	};
 
-	var defaultJobJSON = JSON.stringify(defaultJob,function(key, val){
+	var defaultTaskJSON = JSON.stringify(defaultTask,function(key, val){
 		return typeof val == 'function' ? val.toString().replace(/\s/g,' ') : val;
 	});
 	
-	console.log(defaultJobJSON.replace(/\s/g,''));
+	console.log(defaultTaskJSON.replace(/\s/g,''));
 
 	res.render('index', {
 		title: 'bunbun',
-		defaultJob:defaultJobJSON
+		defaultTask:defaultTaskJSON
 	});
 });
 
