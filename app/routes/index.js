@@ -4,7 +4,7 @@ var router = express.Router();
 /* GET home page. */
 router.get('/', function(req, res) {
 
-	var default = {
+	var defaultTask = {
 		dataBuilder:function(){
 			var data = [];
 			for(var i=0;i<20;i++){
