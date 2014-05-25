@@ -16,7 +16,7 @@
 
 	var calcChargeData;
 
-	var workerNum = 8;
+	var workerNum = 4;
 
 	var calcDistributedData;
 
