@@ -193,7 +193,7 @@
 
 			startTime = new Date();
 
-			job.taskString = $('#job').val();
+			job.taskString = $('#task').val();
 			
 			job.data = makeData(job.taskString);
 

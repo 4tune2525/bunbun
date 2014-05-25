@@ -4,7 +4,7 @@ var router = express.Router();
 /* GET home page. */
 router.get('/', function(req, res) {
 
-	var defaultTask = {
+	var default = {
 		dataBuilder:function(){
 			var data = [];
 			for(var i=0;i<20;i++){
@@ -18,7 +18,7 @@ router.get('/', function(req, res) {
 				totalNum:0
 			};
 
-			for(var i=0;i<120000;i++){
+			for(var i=0;i<12000000;i++){
 				var x = Math.random() * 2 - 1;
 				var y = Math.random() * 2 - 1;
 	
